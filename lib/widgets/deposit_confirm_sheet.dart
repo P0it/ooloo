@@ -1,29 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/wish.dart';
 import '../theme/app_theme.dart';
 import 'clover_mark.dart';
 import 'pressable.dart';
 
-/// 소원 사용 확인 시트. [사용 확인] 시 true 반환.
-Future<bool> showWishConfirmSheet(BuildContext context, Wish wish) async {
+/// 클로버 담기 확인 시트. [담기]/[완성하기] 시 true 반환.
+/// 이번 담기로 소원이 가득 차면 완성 문구로 바뀐다.
+Future<bool> showDepositConfirmSheet(BuildContext context, Wish wish) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.backdrop,
-    builder: (_) => _WishConfirmSheet(wish: wish),
+    builder: (_) => _DepositConfirmSheet(wish: wish),
   );
   return result ?? false;
 }
 
-class _WishConfirmSheet extends StatelessWidget {
+class _DepositConfirmSheet extends StatelessWidget {
   final Wish wish;
-  const _WishConfirmSheet({required this.wish});
+  const _DepositConfirmSheet({required this.wish});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final next = wish.deposited + 1; // 담은 후 개수
+    final willComplete = next >= wish.cost;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -49,13 +55,15 @@ class _WishConfirmSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text('이 소원을 빌까요?',
+          Text(willComplete ? l.depositTitleComplete : l.depositTitle,
               style: AppText.base(size: 22, weight: FontWeight.w700, letterSpacingEm: -0.03)),
           const SizedBox(height: 6),
-          Text('소원을 빌면 클로버를 소모해요.',
-              style: AppText.base(size: 14, weight: FontWeight.w500, color: AppColors.muted)),
+          Text(
+            willComplete ? l.depositDescComplete : l.depositDesc,
+            style: AppText.base(size: 14, weight: FontWeight.w500, color: AppColors.muted, height: 1.45),
+          ),
           const SizedBox(height: 20),
-          // 소원 카드
+          // 소원 카드 (진행 미리보기)
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -68,17 +76,26 @@ class _WishConfirmSheet extends StatelessWidget {
               children: [
                 Text(wish.text,
                     style: AppText.base(size: 17, weight: FontWeight.w600, height: 1.4)),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    const CloverMark(size: 16),
-                    const SizedBox(width: 5),
-                    Text('${wish.cost}개 소모',
-                        style: AppText.base(
-                            size: 14, weight: FontWeight.w600, color: AppColors.muted)),
+                    for (var i = 0; i < wish.cost; i++)
+                      CloverMark(
+                        size: 22,
+                        color: i < wish.deposited
+                            ? null // 이미 담긴 것: accent
+                            : i == wish.deposited
+                                ? AppColors.accent.withValues(alpha: 0.4) // 이번에 담을 칸
+                                : AppColors.emptyLeaf,
+                      ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Text('클로버 ${wish.deposited} / ${wish.cost}  →  $next / ${wish.cost}',
+                    style: AppText.base(
+                        size: 13, weight: FontWeight.w700, color: AppColors.accent)),
               ],
             ),
           ),
@@ -96,7 +113,7 @@ class _WishConfirmSheet extends StatelessWidget {
                       color: AppColors.card,
                       borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
-                    child: Text('취소',
+                    child: Text(l.commonCancel,
                         style: AppText.base(
                             size: 16, weight: FontWeight.w700, color: AppColors.sub)),
                   ),
@@ -121,7 +138,7 @@ class _WishConfirmSheet extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Text('사용 확인',
+                    child: Text(willComplete ? l.depositConfirmComplete : l.depositConfirm,
                         style: AppText.base(
                             size: 16, weight: FontWeight.w700, color: Colors.white)),
                   ),

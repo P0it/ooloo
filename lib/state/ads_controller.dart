@@ -13,10 +13,13 @@ class AdsController {
 
   InterstitialAd? _interstitial;
   bool _loading = false;
+  int _retries = 0;
+  static const _maxRetries = 4;
 
   bool get _supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   /// 앱 시작 시 1회, 그리고 광고 소비 후마다 미리 로드.
+  /// 로드 실패(No fill 등)는 일시적일 수 있어 지수 백오프로 재시도한다.
   void preload() {
     if (!_supported || _loading || _interstitial != null) return;
     _loading = true;
@@ -27,11 +30,17 @@ class AdsController {
         onAdLoaded: (ad) {
           _interstitial = ad;
           _loading = false;
+          _retries = 0;
         },
         onAdFailedToLoad: (err) {
           _interstitial = null;
           _loading = false;
           debugPrint('Interstitial load failed: $err');
+          // 일시적 실패는 재시도(2s, 4s, 8s, 16s). 소진 시 다음 소비 때 다시 시도.
+          if (_retries < _maxRetries) {
+            _retries++;
+            Future.delayed(Duration(seconds: 1 << _retries), preload);
+          }
         },
       ),
     );

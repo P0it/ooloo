@@ -1,0 +1,77 @@
+{
+  "@@locale": "ko",
+
+  "tabHome": "홈",
+  "tabStore": "소원 상점",
+  "tabDex": "소원 도감",
+  "tabArchive": "나의 기록",
+
+  "homeStatusEmpty": "새 네잎클로버를 시작해요.\n4번의 선행이면 잎이 가득 차요.",
+  "homeStatusComplete": "네잎클로버가 완성됐어요! 🍀",
+  "homeStatusProgress": "잎이 {leaves}개 모였어요.\n{remaining}번 더 선행을 베풀면 클로버가 완성돼요!",
+  "homeRecordButton": "오늘의 선행 기록하기",
+
+  "recordTitle": "어떤 선행을 베푸셨나요?",
+  "recordSubtitle": "작은 선행도 클로버의 잎이 됩니다.",
+  "recordHint": "예: 엘리베이터 문을 잡아주었습니다.",
+  "recordSubmit": "기록 완료하고 잎 채우기",
+  "toastCloverComplete": "네잎클로버가 완성됐어요 🍀",
+  "toastLeafFilled": "잎을 채웠어요",
+
+  "archiveTitle": "나의 선행 기록",
+  "archiveStatLeaves": "총 채운 잎",
+  "archiveStatClovers": "탄생한 클로버",
+  "archiveStatWishes": "이룬 소원",
+  "archiveTimeline": "타임라인",
+  "archiveCalendar": "캘린더",
+  "archiveEmpty": "아직 기록이 없어요.",
+
+  "historyWishDone": "[소원 성취] {text}",
+  "historyLeafDelta": "🍃 잎 +{count}",
+  "historyCloverDelta": "🍀 클로버 -{count}",
+
+  "storeTitle": "소원 상점",
+  "storeOwnedLabel": "보유한 클로버",
+  "storeCloverCount": "{count}개",
+  "storeAddWish": "+ 나만의 소원 추가하기",
+  "storeWishHint": "이루고 싶은 나만의 소원",
+  "storeRequiredClovers": "필요한 클로버",
+  "commonCancel": "취소",
+  "storeAddWishConfirm": "소원 추가",
+  "storeDepositFull": "담기 완료",
+  "storeDeposit": "클로버 담기",
+  "storeNotEnough": "클로버 부족",
+
+  "depositTitleComplete": "소원을 완성할까요?",
+  "depositTitle": "클로버를 담을까요?",
+  "depositDescComplete": "이 클로버를 담으면 소원이 이루어져요.",
+  "depositDesc": "보유 클로버 1개를 담아요. 담은 클로버는 되돌릴 수 없어요.",
+  "depositConfirmComplete": "완성하기",
+  "depositConfirm": "담기",
+
+  "dexTitle": "소원 도감",
+  "dexSubtitle": "전한 소원들이 이곳에 모여요",
+  "dexEmptyTitle": "아직 전한 소원이 없어요.",
+  "dexEmptyDesc": "클로버를 다 모아 소원을 전하면 이곳에 담겨요.",
+  "dexDelivered": "전달 완료",
+  "dexTalismanLabel": "부적",
+
+  "grantTitle": "소원을 전달하고 오겠습니다.",
+  "toastWishDelivered": "소원을 전했어요 · 도감에 담겼어요 🍀",
+
+  "talismanTitle": "행운 부적",
+  "talismanPortrait": "세로형",
+  "talismanSquare": "정사각형",
+  "talismanSave": "앨범 저장",
+  "talismanShare": "공유하기",
+  "toastSavedToAlbum": "사진 앨범에 저장했어요 🍀",
+  "talismanSaveFail": "저장하려면 사진 접근 권한이 필요해요.",
+  "talismanRetry": "잠시 후 다시 시도해 주세요.",
+  "talismanShareText": "제 소원이 이루어졌어요 🍀\n당신에게도 이 행운이 닿기를.\n\nooloo — 선행으로 채우는 네잎클로버",
+  "talismanLabel": "소원 성취 부적",
+  "talismanCenterLine": "이 소원이 이루어졌어요",
+  "talismanTagline": "선행으로 채우는 네잎클로버",
+
+  "languageSheetTitle": "언어",
+  "languageSystem": "시스템 설정 따르기"
+}

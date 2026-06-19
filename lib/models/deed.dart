@@ -1,28 +1,64 @@
-/// 기록 항목 — 선행으로 잎을 모은 내역, 또는 소원 성취(클로버 사용) 내역.
-/// positive=true 면 "모은 기록", false 면 "사용 기록".
+/// 기록 항목의 종류.
+/// - deed: 선행으로 잎을 모은 기록 (positive)
+/// - wish: 소원 성취(클로버 사용) 기록
+enum HistoryKind { deed, wish }
+
+/// 기록 항목 — 표시 문자열을 미리 굳히지 않고 구조화해 저장한다.
+/// (잎/클로버 증감과 소원 성취 접두어는 표시 시점에 언어별로 포맷한다.)
 class HistoryEntry {
   final int id;
   final String date; // 'YYYY.MM.DD'
+  final HistoryKind kind;
+
+  /// deed: 사용자가 입력한 선행 내용 / wish: 소원 텍스트(접두어 없음).
   final String text;
-  final String delta; // 예: '🍀 잎 +1' / '🍀 클로버 -2'
-  final bool positive;
+
+  /// deed: 채운 잎 수(+1) / wish: 사용한 클로버 수.
+  final int amount;
+
+  /// 구버전 영속 데이터 호환용 — 신규 항목은 null.
+  /// 값이 있으면 표시할 때 [text]/[legacyDelta]를 원문 그대로 쓴다.
+  final String? legacyDelta;
 
   const HistoryEntry({
     required this.id,
     required this.date,
+    required this.kind,
     required this.text,
-    required this.delta,
-    required this.positive,
+    required this.amount,
+    this.legacyDelta,
   });
 
-  Map<String, dynamic> toJson() =>
-      {'id': id, 'date': date, 'text': text, 'delta': delta, 'positive': positive};
+  bool get positive => kind == HistoryKind.deed;
 
-  factory HistoryEntry.fromJson(Map<String, dynamic> j) => HistoryEntry(
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date,
+        'kind': kind.name,
+        'text': text,
+        'amount': amount,
+      };
+
+  factory HistoryEntry.fromJson(Map<String, dynamic> j) {
+    // 신규 포맷(kind/amount 보유).
+    if (j['kind'] != null && j['amount'] != null) {
+      return HistoryEntry(
         id: j['id'] as int,
         date: j['date'] as String,
-        text: j['text'] as String,
-        delta: j['delta'] as String,
-        positive: j['positive'] as bool,
+        kind: j['kind'] == 'wish' ? HistoryKind.wish : HistoryKind.deed,
+        text: j['text'] as String? ?? '',
+        amount: j['amount'] as int,
       );
+    }
+    // 구버전 포맷(delta/positive 보유) — 원문을 보존해 그대로 표시.
+    final positive = j['positive'] as bool? ?? true;
+    return HistoryEntry(
+      id: j['id'] as int,
+      date: j['date'] as String? ?? '',
+      kind: positive ? HistoryKind.deed : HistoryKind.wish,
+      text: j['text'] as String? ?? '',
+      amount: 0,
+      legacyDelta: j['delta'] as String?,
+    );
+  }
 }

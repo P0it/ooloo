@@ -7,8 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'l10n/app_localizations.dart';
 import 'screens/home_shell.dart';
 import 'state/ads_controller.dart';
+import 'state/locale_controller.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -21,14 +23,14 @@ void main() {
   runApp(const ProviderScope(child: OolooApp()));
 }
 
-class OolooApp extends StatefulWidget {
+class OolooApp extends ConsumerStatefulWidget {
   const OolooApp({super.key});
 
   @override
-  State<OolooApp> createState() => _OolooAppState();
+  ConsumerState<OolooApp> createState() => _OolooAppState();
 }
 
-class _OolooAppState extends State<OolooApp> {
+class _OolooAppState extends ConsumerState<OolooApp> {
   @override
   void initState() {
     super.initState();
@@ -57,6 +59,10 @@ class _OolooAppState extends State<OolooApp> {
       title: 'ooloo',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
+      // null = OS 언어 자동 감지, 값이 있으면 사용자가 고른 언어로 강제.
+      locale: ref.watch(localeProvider),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const HomeShell(),
     );
   }

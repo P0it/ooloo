@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/daily_quotes.dart';
+import '../l10n/app_localizations.dart';
 import '../state/app_controller.dart';
+import '../util/text_wrap.dart';
 import '../theme/app_theme.dart';
 import '../widgets/clover_mark.dart';
 import '../widgets/clover_widget.dart';
@@ -11,22 +14,16 @@ import '../widgets/record_sheet.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  String _todayLabel() {
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    final d = DateTime.now();
-    // DateTime.weekday: 월=1..일=7  → days 인덱스(일=0)로 변환
-    final dow = d.weekday % 7;
-    return '${d.month}월 ${d.day}일 ${days[dow]}요일';
-  }
-
-  String _statusText(int leaves) {
-    if (leaves <= 0) return '새 네잎클로버를 시작해요. 4번의 선행이면 잎이 가득 차요.';
-    if (leaves >= 4) return '네잎클로버가 완성됐어요! 🍀';
-    return '잎이 $leaves개 모였어요. ${4 - leaves}번 더 선행을 베풀면 클로버가 완성돼요!';
+  String _statusText(AppLocalizations l, int leaves) {
+    if (leaves <= 0) return l.homeStatusEmpty;
+    if (leaves >= 4) return l.homeStatusComplete;
+    return l.homeStatusProgress(leaves, 4 - leaves);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
     final s = ref.watch(appControllerProvider);
 
     return Padding(
@@ -41,11 +38,11 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_todayLabel(),
+                    Text(MaterialLocalizations.of(context).formatFullDate(DateTime.now()),
                         style: AppText.base(
                             size: 13, weight: FontWeight.w500, color: AppColors.muted)),
                     const SizedBox(height: 5),
-                    Text('오늘도 따뜻한 하루',
+                    Text(DailyQuotes.forToday(lang).keepAll,
                         style: AppText.base(
                             size: 21, weight: FontWeight.w700, letterSpacingEm: -0.035)),
                   ],
@@ -86,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 288),
                   child: Text(
-                    _statusText(s.leaves),
+                    _statusText(l, s.leaves).keepAll,
                     textAlign: TextAlign.center,
                     style: AppText.base(
                         size: 16, weight: FontWeight.w500, color: AppColors.sub, height: 1.55),
@@ -113,7 +110,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: Text('오늘의 선행 기록하기',
+              child: Text(l.homeRecordButton,
                   style: AppText.base(size: 17, weight: FontWeight.w700, color: Colors.white)),
             ),
           ),

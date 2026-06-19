@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../models/deed.dart';
 import '../state/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/clover_mark.dart';
+import '../widgets/deed_heatmap.dart';
+import '../widgets/language_sheet.dart';
 import '../widgets/pressable.dart';
 
 class ArchiveScreen extends ConsumerWidget {
@@ -13,10 +16,10 @@ class ArchiveScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final s = ref.watch(appControllerProvider);
     final notifier = ref.read(appControllerProvider.notifier);
-    final isEarn = s.archiveFilter == ArchiveFilter.earn;
-    final filtered = s.history.where((h) => isEarn ? h.positive : !h.positive).toList();
+    final isCalendar = s.archiveView == ArchiveView.calendar;
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -24,8 +27,24 @@ class ArchiveScreen extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 36, 24, 8),
-          child: Text('나의 선행 기록',
-              style: AppText.base(size: 30, weight: FontWeight.w800, letterSpacingEm: -0.035)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(l.archiveTitle,
+                    style: AppText.base(
+                        size: 30, weight: FontWeight.w800, letterSpacingEm: -0.035)),
+              ),
+              // 언어 설정 진입점 — 탭/플로팅 없이 헤더 우상단에.
+              Pressable(
+                onTap: () => showLanguageSheet(context),
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.language_rounded, size: 24, color: AppColors.muted),
+                ),
+              ),
+            ],
+          ),
         ),
         // ---- 통계 대시보드 ----
         Container(
@@ -39,11 +58,11 @@ class ArchiveScreen extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _stat('${s.statLeaves}', '총 채운 잎', AppColors.title),
+                _stat('${s.statLeaves}', l.archiveStatLeaves, AppColors.title),
                 _divider(),
-                _stat('${s.statClovers}', '탄생한 클로버', AppColors.accent),
+                _stat('${s.statClovers}', l.archiveStatClovers, AppColors.accent),
                 _divider(),
-                _stat('${s.statWishes}', '이룬 소원', AppColors.title),
+                _stat('${s.statWishes}', l.archiveStatWishes, AppColors.title),
               ],
             ),
           ),
@@ -61,18 +80,20 @@ class ArchiveScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    _segTab('모은 기록', isEarn,
-                        () => notifier.setArchiveFilter(ArchiveFilter.earn), AppColors.accent),
-                    _segTab('사용 기록', !isEarn,
-                        () => notifier.setArchiveFilter(ArchiveFilter.spend), AppColors.title),
+                    _segTab(l.archiveTimeline, !isCalendar,
+                        () => notifier.setArchiveView(ArchiveView.timeline), AppColors.title),
+                    _segTab(l.archiveCalendar, isCalendar,
+                        () => notifier.setArchiveView(ArchiveView.calendar), AppColors.title),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-              if (filtered.isEmpty)
-                _emptyState(isEarn)
+              if (isCalendar)
+                DeedHeatmap(history: s.history)
+              else if (s.history.isEmpty)
+                _emptyState(context)
               else
-                _Timeline(entries: filtered),
+                _Timeline(entries: s.history),
             ],
           ),
         ),
@@ -122,14 +143,14 @@ class ArchiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _emptyState(bool isEarn) {
+  Widget _emptyState(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 46),
       child: Column(
         children: [
           Opacity(opacity: 0.5, child: const CloverMark(size: 30, withStem: true)),
           const SizedBox(height: 10),
-          Text(isEarn ? '아직 모은 기록이 없어요.' : '아직 사용한 기록이 없어요.',
+          Text(AppLocalizations.of(context).archiveEmpty,
               style: AppText.base(size: 14, weight: FontWeight.w500, color: AppColors.muted)),
         ],
       ),
@@ -141,75 +162,104 @@ class _Timeline extends StatelessWidget {
   final List<HistoryEntry> entries;
   const _Timeline({required this.entries});
 
+  // 좌측 레일(점+세로선) 치수 — 점과 선이 같은 중심을 공유한다.
+  static const double _rail = 28;
+  static const double _dot = 12;
+  static const double _dotTop = 3;
+  static const double _dotCenter = _dotTop + _dot / 2; // 점의 세로 중심
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 24),
-      child: Stack(
-        children: [
-          // 세로 라인
-          Positioned(
-            left: 5,
-            top: 8,
-            bottom: 10,
-            child: Container(width: 2, color: AppColors.border),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final h in entries) _row(h),
-            ],
-          ),
-        ],
-      ),
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < entries.length; i++)
+          _row(l, entries[i], i == 0, i == entries.length - 1),
+      ],
     );
   }
 
-  Widget _row(HistoryEntry h) {
+  /// 구버전 데이터는 저장된 원문을, 신규 데이터는 언어별로 포맷한 본문을 만든다.
+  String _displayText(AppLocalizations l, HistoryEntry h) {
+    if (h.legacyDelta != null) return h.text;
+    return h.kind == HistoryKind.wish ? l.historyWishDone(h.text) : h.text;
+  }
+
+  String _displayDelta(AppLocalizations l, HistoryEntry h) {
+    if (h.legacyDelta != null) return h.legacyDelta!;
+    return h.kind == HistoryKind.deed
+        ? l.historyLeafDelta(h.amount)
+        : l.historyCloverDelta(h.amount);
+  }
+
+  Widget _row(AppLocalizations l, HistoryEntry h, bool isFirst, bool isLast) {
     final color = h.positive ? AppColors.accent : AppColors.muted;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 22),
-      child: Stack(
-        clipBehavior: Clip.none,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 타임라인 점
-          Positioned(
-            left: -24,
-            top: 3,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: color, width: 3),
-              ),
+          // ---- 레일: 세로 연결선 + 점 ----
+          SizedBox(
+            width: _rail,
+            child: Stack(
+              children: [
+                // 연결선 — 첫 행은 점부터 아래로, 마지막 행은 위에서 점까지.
+                if (!(isFirst && isLast))
+                  Positioned(
+                    left: _rail / 2 - 1,
+                    top: isFirst ? _dotCenter : 0,
+                    bottom: isLast ? null : 0,
+                    height: isLast ? _dotCenter : null,
+                    child: Container(width: 2, color: AppColors.border),
+                  ),
+                // 점 (선 위에 올라타도록 마지막에 그린다)
+                Positioned(
+                  left: _rail / 2 - _dot / 2,
+                  top: _dotTop,
+                  child: Container(
+                    width: _dot,
+                    height: _dot,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color, width: 3),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(h.date,
-                  style: AppText.base(
-                      size: 12, weight: FontWeight.w600, color: AppColors.muted, letterSpacingEm: -0.01)),
-              const SizedBox(height: 5),
-              Text(h.text,
-                  style: AppText.base(size: 15, weight: FontWeight.w500, height: 1.45)),
-              const SizedBox(height: 9),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: h.positive ? AppColors.accentSoft : AppColors.card,
-                  borderRadius: BorderRadius.circular(AppRadius.chipFull),
-                ),
-                child: Text(h.delta,
-                    style: AppText.base(
-                        size: 12,
-                        weight: FontWeight.w700,
-                        color: h.positive ? AppColors.accent : AppColors.muted,
-                        letterSpacingEm: -0.01)),
+          // ---- 본문 ----
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(h.date,
+                      style: AppText.base(
+                          size: 12, weight: FontWeight.w600, color: AppColors.muted, letterSpacingEm: -0.01)),
+                  const SizedBox(height: 5),
+                  Text(_displayText(l, h),
+                      style: AppText.base(size: 15, weight: FontWeight.w500, height: 1.45)),
+                  const SizedBox(height: 9),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: h.positive ? AppColors.accentSoft : AppColors.card,
+                      borderRadius: BorderRadius.circular(AppRadius.chipFull),
+                    ),
+                    child: Text(_displayDelta(l, h),
+                        style: AppText.base(
+                            size: 12,
+                            weight: FontWeight.w700,
+                            color: h.positive ? AppColors.accent : AppColors.muted,
+                            letterSpacingEm: -0.01)),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),

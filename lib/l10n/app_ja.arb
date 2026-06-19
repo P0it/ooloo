@@ -1,0 +1,77 @@
+{
+  "@@locale": "ja",
+
+  "tabHome": "ホーム",
+  "tabStore": "願いストア",
+  "tabDex": "願い図鑑",
+  "tabArchive": "わたしの記録",
+
+  "homeStatusEmpty": "新しい四つ葉のクローバーを始めましょう。\n4つの善い行いで葉が満ちます。",
+  "homeStatusComplete": "四つ葉のクローバーが完成しました！🍀",
+  "homeStatusProgress": "葉が{leaves}枚集まりました。\nあと{remaining}回の善い行いでクローバーが完成します！",
+  "homeRecordButton": "今日の善い行いを記録する",
+
+  "recordTitle": "どんな善い行いをしましたか？",
+  "recordSubtitle": "小さな行いも、クローバーの葉になります。",
+  "recordHint": "例：エレベーターのドアを押さえてあげました。",
+  "recordSubmit": "記録して葉を満たす",
+  "toastCloverComplete": "四つ葉のクローバーが完成しました 🍀",
+  "toastLeafFilled": "葉を満たしました",
+
+  "archiveTitle": "わたしの善行記録",
+  "archiveStatLeaves": "満たした葉",
+  "archiveStatClovers": "生まれたクローバー",
+  "archiveStatWishes": "叶えた願い",
+  "archiveTimeline": "タイムライン",
+  "archiveCalendar": "カレンダー",
+  "archiveEmpty": "まだ記録がありません。",
+
+  "historyWishDone": "［願い成就］{text}",
+  "historyLeafDelta": "🍃 葉 +{count}",
+  "historyCloverDelta": "🍀 クローバー -{count}",
+
+  "storeTitle": "願いストア",
+  "storeOwnedLabel": "保有クローバー",
+  "storeCloverCount": "{count}個",
+  "storeAddWish": "+ 自分だけの願いを追加",
+  "storeWishHint": "叶えたい自分の願い",
+  "storeRequiredClovers": "必要なクローバー",
+  "commonCancel": "キャンセル",
+  "storeAddWishConfirm": "願いを追加",
+  "storeDepositFull": "完了",
+  "storeDeposit": "クローバーを入れる",
+  "storeNotEnough": "クローバー不足",
+
+  "depositTitleComplete": "願いを叶えますか？",
+  "depositTitle": "クローバーを入れますか？",
+  "depositDescComplete": "このクローバーを入れると願いが叶います。",
+  "depositDesc": "クローバーを1つ入れます。入れたクローバーは元に戻せません。",
+  "depositConfirmComplete": "叶える",
+  "depositConfirm": "入れる",
+
+  "dexTitle": "願い図鑑",
+  "dexSubtitle": "叶えた願いがここに集まります",
+  "dexEmptyTitle": "まだ叶えた願いがありません。",
+  "dexEmptyDesc": "クローバーを集めて願いを叶えると、ここに収められます。",
+  "dexDelivered": "お届け完了",
+  "dexTalismanLabel": "お守り",
+
+  "grantTitle": "願いを届けてまいります。",
+  "toastWishDelivered": "願いを届けました・図鑑に収めました 🍀",
+
+  "talismanTitle": "幸運のお守り",
+  "talismanPortrait": "縦型",
+  "talismanSquare": "正方形",
+  "talismanSave": "アルバムに保存",
+  "talismanShare": "シェアする",
+  "toastSavedToAlbum": "写真アルバムに保存しました 🍀",
+  "talismanSaveFail": "保存するには写真へのアクセス許可が必要です。",
+  "talismanRetry": "しばらくしてからもう一度お試しください。",
+  "talismanShareText": "わたしの願いが叶いました 🍀\nこの幸運があなたにも届きますように。\n\nooloo — 善い行いで満たす四つ葉のクローバー",
+  "talismanLabel": "願い成就のお守り",
+  "talismanCenterLine": "この願いが叶いました",
+  "talismanTagline": "善い行いで満たす四つ葉のクローバー",
+
+  "languageSheetTitle": "言語",
+  "languageSystem": "システム設定に従う"
+}

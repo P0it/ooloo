@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/wish.dart';
 import '../state/ads_controller.dart';
 import '../state/app_controller.dart';
@@ -66,12 +67,12 @@ class _WishGrantOverlayState extends ConsumerState<_WishGrantOverlay>
   }
 
   void _commit() {
-    // 광고 종료 후 소원 확정(클로버 차감 + 기록).
-    ref.read(appControllerProvider.notifier).grantWish(widget.wish);
+    // 광고 종료 후 소원 완성 처리(도감 이동 + 기록). 클로버는 담기 단계에서 이미 차감됨.
+    ref.read(appControllerProvider.notifier).completeWish(widget.wish);
     if (!mounted) return;
     final nav = Navigator.of(context);
     // 토스트는 루트 오버레이에 삽입되어 pop 이후에도 유지된다.
-    showOolooToast(context, '소원이 이루어졌어요 ✨');
+    showOolooToast(context, AppLocalizations.of(context).toastWishDelivered);
     nav.pop();
   }
 
@@ -126,7 +127,7 @@ class _WishGrantOverlayState extends ConsumerState<_WishGrantOverlay>
                   child: Column(
                     children: [
                       Text(
-                        '소원을 전달하고 오겠습니다.',
+                        AppLocalizations.of(context).grantTitle,
                         textAlign: TextAlign.center,
                         style: AppText.base(
                             size: 21, weight: FontWeight.w700, letterSpacingEm: -0.03),

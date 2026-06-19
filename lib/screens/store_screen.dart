@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/wish.dart';
 import '../state/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/clover_mark.dart';
 import '../widgets/dashed_rect.dart';
+import '../widgets/deposit_confirm_sheet.dart';
 import '../widgets/pressable.dart';
-import '../widgets/wish_confirm_sheet.dart';
 import '../widgets/wish_grant_overlay.dart';
 
 class StoreScreen extends ConsumerStatefulWidget {
@@ -28,13 +29,12 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
     super.dispose();
   }
 
-  // 소원 사용 → 확인 → 햅틱/애니메이션/광고 → 확정.
-  Future<void> _useWish(Wish w) async {
-    final confirmed = await showWishConfirmSheet(context, w);
+  // 클로버 1개 담기 → 확인 → (가득 차면) 완성 연출/광고 플로우 진입.
+  Future<void> _deposit(Wish w) async {
+    final confirmed = await showDepositConfirmSheet(context, w);
     if (!confirmed || !mounted) return;
-    // 확정 직전 재확인 (그 사이 클로버가 부족해졌을 수 있음).
-    if (!ref.read(appControllerProvider.notifier).canAfford(w)) return;
-    await runWishGrantFlow(context, ref, w);
+    final justCompleted = ref.read(appControllerProvider.notifier).depositClover(w);
+    if (justCompleted && mounted) runWishGrantFlow(context, ref, w);
   }
 
   void _addWish() {
@@ -50,6 +50,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final s = ref.watch(appControllerProvider);
 
     return ListView(
@@ -62,7 +63,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('소원 상점',
+              Text(l.storeTitle,
                   style: AppText.base(size: 30, weight: FontWeight.w800, letterSpacingEm: -0.035)),
               const SizedBox(height: 12),
               // 보유 클로버 칩
@@ -79,13 +80,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('보유한 클로버',
+                    Text(l.storeOwnedLabel,
                         style: AppText.base(
                             size: 14, weight: FontWeight.w600, color: AppColors.muted)),
                     const SizedBox(width: 8),
                     const CloverMark(size: 17),
                     const SizedBox(width: 4),
-                    Text('${s.clovers}개',
+                    Text(l.storeCloverCount(s.clovers),
                         style: AppText.base(size: 16, weight: FontWeight.w800)),
                   ],
                 ),
@@ -101,8 +102,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               for (final w in s.wishes) ...[
                 _WishCard(
                   wish: w,
-                  affordable: s.clovers >= w.cost,
-                  onUse: () => _useWish(w),
+                  owned: s.clovers,
+                  onDeposit: () => _deposit(w),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -124,7 +125,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           alignment: Alignment.center,
-          child: Text('+ 나만의 소원 추가하기',
+          child: Text(AppLocalizations.of(context).storeAddWish,
               style: AppText.base(size: 15, weight: FontWeight.w600, color: AppColors.muted)),
         ),
       ),
@@ -132,6 +133,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   }
 
   Widget _buildAddForm() {
+    final l = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -159,7 +161,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               style: AppText.base(size: 15, weight: FontWeight.w500),
               cursorColor: AppColors.accent,
               decoration: InputDecoration.collapsed(
-                hintText: '이루고 싶은 나만의 소원',
+                hintText: l.storeWishHint,
                 hintStyle: AppText.base(size: 15, weight: FontWeight.w500, color: AppColors.muted),
               ),
             ),
@@ -168,7 +170,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('필요한 클로버',
+              Text(l.storeRequiredClovers,
                   style: AppText.base(size: 14, weight: FontWeight.w600, color: AppColors.sub)),
               Row(
                 children: [
@@ -204,7 +206,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       color: AppColors.card,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Text('취소',
+                    child: Text(l.commonCancel,
                         style: AppText.base(
                             size: 15, weight: FontWeight.w700, color: AppColors.sub)),
                   ),
@@ -222,7 +224,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Text('소원 추가',
+                    child: Text(l.storeAddWishConfirm,
                         style: AppText.base(
                             size: 15, weight: FontWeight.w700, color: Colors.white)),
                   ),
@@ -255,58 +257,86 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
 
 class _WishCard extends StatelessWidget {
   final Wish wish;
-  final bool affordable;
-  final VoidCallback onUse;
+  final int owned; // 보유 클로버
+  final VoidCallback onDeposit;
 
-  const _WishCard({required this.wish, required this.affordable, required this.onUse});
+  const _WishCard({required this.wish, required this.owned, required this.onDeposit});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final full = wish.deposited >= wish.cost;
+    final canDeposit = owned > 0 && !full;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(AppRadius.card),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 18, 18, 18),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(wish.text,
+          // 제목 + 진행 칩
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(wish.text,
                     style: AppText.base(size: 16, weight: FontWeight.w600, height: 1.4)),
-                const SizedBox(height: 8),
-                Row(
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.accentSoft,
+                  borderRadius: BorderRadius.circular(AppRadius.chipFull),
+                ),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CloverMark(size: 14),
+                    const CloverMark(size: 13),
                     const SizedBox(width: 4),
-                    Text('${wish.cost}개 소모',
+                    Text('${wish.deposited} / ${wish.cost}',
                         style: AppText.base(
-                            size: 13, weight: FontWeight.w600, color: AppColors.muted)),
+                            size: 13, weight: FontWeight.w700, color: AppColors.accent)),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
+          const SizedBox(height: 14),
+          // 채워지는 클로버 줄
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var i = 0; i < wish.cost; i++)
+                CloverMark(size: 22, color: i < wish.deposited ? null : AppColors.emptyLeaf),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 담기 버튼
           Pressable(
-            onTap: affordable ? onUse : null,
+            onTap: canDeposit ? onDeposit : null,
             child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              width: double.infinity,
+              height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: affordable ? AppColors.accent : AppColors.bg,
+                color: canDeposit ? AppColors.accent : AppColors.bg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                affordable ? '소원 빌기' : '클로버 부족',
+                full
+                    ? l.storeDepositFull
+                    : canDeposit
+                        ? l.storeDeposit
+                        : l.storeNotEnough,
                 style: AppText.base(
                   size: 14,
                   weight: FontWeight.w700,
-                  color: affordable ? Colors.white : AppColors.disabled,
+                  color: canDeposit ? Colors.white : AppColors.disabled,
                 ),
               ),
             ),

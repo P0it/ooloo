@@ -3,12 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:ooloo/config/daily_quotes.dart';
+import 'package:ooloo/l10n/app_localizations.dart';
 import 'package:ooloo/screens/home_shell.dart';
 import 'package:ooloo/state/ads_controller.dart';
+import 'package:ooloo/util/text_wrap.dart';
 import 'package:ooloo/theme/app_theme.dart';
 
+// 테스트는 한국어 로케일로 고정해 기존 한글 단언을 그대로 검증한다.
 Widget _app() => ProviderScope(
-      child: MaterialApp(theme: buildAppTheme(), home: const HomeShell()),
+      child: MaterialApp(
+        theme: buildAppTheme(),
+        locale: const Locale('ko'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const HomeShell(),
+      ),
     );
 
 void main() {
@@ -26,17 +36,22 @@ void main() {
 
   testWidgets('홈 화면이 렌더링된다 (클로버 페인터 포함)', (tester) async {
     await pumpApp(tester);
-    expect(find.text('오늘도 따뜻한 하루'), findsOneWidget);
+    expect(find.text(DailyQuotes.forToday('ko').keepAll), findsOneWidget);
     expect(find.text('오늘의 선행 기록하기'), findsOneWidget);
   });
 
-  testWidgets('탭으로 세 화면을 모두 오갈 수 있다', (tester) async {
+  testWidgets('탭으로 네 화면을 모두 오갈 수 있다', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('소원 상점'));
     await tester.pump(const Duration(milliseconds: 350));
     expect(find.text('보유한 클로버'), findsOneWidget);
     expect(find.text('면접에서 좋은 결과 받기'), findsOneWidget);
+
+    await tester.tap(find.text('소원 도감'));
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(find.text('전한 소원들이 이곳에 모여요'), findsOneWidget);
+    expect(find.text('아직 전한 소원이 없어요.'), findsOneWidget);
 
     await tester.tap(find.text('나의 기록'));
     await tester.pump(const Duration(milliseconds: 350));
@@ -76,27 +91,36 @@ void main() {
     expect(done, true);
   });
 
-  testWidgets('소원 사용 플로우: 확인 → 전달 연출 → (광고 스킵) → 클로버 차감', (tester) async {
+  testWidgets('담기 → 완성(전달 연출 → 광고 스킵) → 소원이 도감으로 이동', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('소원 상점'));
     await tester.pump(const Duration(milliseconds: 400)); // 홈 클로버 dispose 까지 전환 완료
 
-    // 첫 소원(면접, cost 2, 보유 2) → 소원 빌기 (스토어 탭엔 무한 애니메이션이 없어 settle 가능)
-    await tester.tap(find.text('소원 빌기').first);
-    await tester.pumpAndSettle();
-    expect(find.text('이 소원을 빌까요?'), findsOneWidget);
+    // 첫 소원(면접, cost 4, deposited 2, 보유 5) → 담기 → 확인 시트 → 담기 → 3/4 (연출 없음)
+    await tester.tap(find.text('클로버 담기').first);
+    await tester.pumpAndSettle(); // 확인 시트 진입
+    expect(find.text('클로버를 담을까요?'), findsOneWidget);
+    await tester.tap(find.text('담기'));
+    await tester.pumpAndSettle(); // 시트 닫힘
+    expect(find.text('3 / 4'), findsOneWidget);
 
-    await tester.tap(find.text('사용 확인'));
+    // 한 번 더 담기 → 확인 시트가 '완성' 문구 → 완성하기 → 전달 연출 진입
+    await tester.tap(find.text('클로버 담기').first);
+    await tester.pumpAndSettle();
+    expect(find.text('소원을 완성할까요?'), findsOneWidget);
+    await tester.tap(find.text('완성하기'));
     await tester.pumpAndSettle(); // 전달 오버레이 진입 + 연출 정착
     expect(find.text('소원을 전달하고 오겠습니다.'), findsOneWidget);
 
-    // 광고 타이머(1.5s) 발화 → 스킵 → 커밋 → 오버레이 pop
+    // 광고 타이머(1.5s) 발화 → 스킵 → completeWish → 오버레이 pop
     await tester.pump(const Duration(milliseconds: 1700));
     await tester.pumpAndSettle(); // pop 전환 정착
     await tester.pump(const Duration(milliseconds: 2200)); // 토스트 타이머 flush
 
-    // 보유 클로버가 2 → 0 으로 차감되어 더 이상 빌 수 없음
-    expect(find.text('클로버 부족'), findsWidgets);
+    // 완성 후 자동으로 소원 도감 탭으로 이동하고, 소원이 도감에 담긴다.
+    expect(find.text('전한 소원들이 이곳에 모여요'), findsOneWidget); // 도감 화면이 떠 있음
+    expect(find.text('면접에서 좋은 결과 받기'), findsOneWidget);
+    expect(find.text('전달 완료'), findsWidgets);
   });
 }

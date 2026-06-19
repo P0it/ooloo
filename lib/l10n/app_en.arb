@@ -1,0 +1,103 @@
+{
+  "@@locale": "en",
+
+  "tabHome": "Home",
+  "tabStore": "Wish Store",
+  "tabDex": "Wish Book",
+  "tabArchive": "My Record",
+
+  "homeStatusEmpty": "Start a new four-leaf clover.\nFour good deeds fill all its leaves.",
+  "homeStatusComplete": "Your four-leaf clover is complete! 🍀",
+  "homeStatusProgress": "{leaves} leaves gathered.\n{remaining} more good deeds to complete the clover!",
+  "@homeStatusProgress": {
+    "placeholders": {
+      "leaves": { "type": "int" },
+      "remaining": { "type": "int" }
+    }
+  },
+  "homeRecordButton": "Record today's good deed",
+
+  "recordTitle": "What kind deed did you do?",
+  "recordSubtitle": "Even a small deed becomes a clover leaf.",
+  "recordHint": "e.g. I held the elevator door for someone.",
+  "recordSubmit": "Save and fill a leaf",
+  "toastCloverComplete": "Your four-leaf clover is complete 🍀",
+  "toastLeafFilled": "You filled a leaf",
+
+  "archiveTitle": "My Good Deeds",
+  "archiveStatLeaves": "Leaves filled",
+  "archiveStatClovers": "Clovers born",
+  "archiveStatWishes": "Wishes granted",
+  "archiveTimeline": "Timeline",
+  "archiveCalendar": "Calendar",
+  "archiveEmpty": "No records yet.",
+
+  "historyWishDone": "[Wish granted] {text}",
+  "@historyWishDone": {
+    "placeholders": {
+      "text": { "type": "String" }
+    }
+  },
+  "historyLeafDelta": "🍃 Leaf +{count}",
+  "@historyLeafDelta": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "historyCloverDelta": "🍀 Clover -{count}",
+  "@historyCloverDelta": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "storeTitle": "Wish Store",
+  "storeOwnedLabel": "Clovers owned",
+  "storeCloverCount": "{count}",
+  "@storeCloverCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "storeAddWish": "+ Add my own wish",
+  "storeWishHint": "A wish you want to come true",
+  "storeRequiredClovers": "Clovers needed",
+  "commonCancel": "Cancel",
+  "storeAddWishConfirm": "Add wish",
+  "storeDepositFull": "Filled",
+  "storeDeposit": "Add clover",
+  "storeNotEnough": "Not enough",
+
+  "depositTitleComplete": "Grant this wish?",
+  "depositTitle": "Add a clover?",
+  "depositDescComplete": "Adding this clover will grant your wish.",
+  "depositDesc": "Add one clover. Added clovers can't be undone.",
+  "depositConfirmComplete": "Grant",
+  "depositConfirm": "Add",
+
+  "dexTitle": "Wish Book",
+  "dexSubtitle": "Granted wishes gather here",
+  "dexEmptyTitle": "No granted wishes yet.",
+  "dexEmptyDesc": "Gather all the clovers and grant a wish to see it here.",
+  "dexDelivered": "Delivered",
+  "dexTalismanLabel": "Talisman",
+
+  "grantTitle": "Off to deliver your wish.",
+  "toastWishDelivered": "Your wish was delivered · saved to your book 🍀",
+
+  "talismanTitle": "Lucky Talisman",
+  "talismanPortrait": "Portrait",
+  "talismanSquare": "Square",
+  "talismanSave": "Save to album",
+  "talismanShare": "Share",
+  "toastSavedToAlbum": "Saved to your photo album 🍀",
+  "talismanSaveFail": "Photo access permission is needed to save.",
+  "talismanRetry": "Please try again in a moment.",
+  "talismanShareText": "My wish came true 🍀\nMay this luck reach you too.\n\nooloo — a four-leaf clover filled with good deeds",
+  "talismanLabel": "Wish-Granted Talisman",
+  "talismanCenterLine": "This wish has come true",
+  "talismanTagline": "a four-leaf clover filled with good deeds",
+
+  "languageSheetTitle": "Language",
+  "languageSystem": "Follow system settings"
+}

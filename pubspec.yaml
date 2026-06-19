@@ -10,12 +10,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.6.1
   shared_preferences: ^2.3.3
   google_mobile_ads: ^5.3.1
   app_tracking_transparency: ^2.0.6
+  gal: ^2.3.2
+  share_plus: ^13.1.0
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +30,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   fonts:
     - family: Pretendard

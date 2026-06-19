@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../state/app_controller.dart';
 import '../theme/app_theme.dart';
 import 'ooloo_toast.dart';
@@ -37,13 +38,15 @@ class _RecordSheetState extends ConsumerState<_RecordSheet> {
   void _record() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+    final l = AppLocalizations.of(context);
     final completed = ref.read(appControllerProvider.notifier).recordDeed(text);
     Navigator.of(context).pop();
-    showOolooToast(context, completed ? '네잎클로버가 완성됐어요 🍀' : '잎을 채웠어요');
+    showOolooToast(context, completed ? l.toastCloverComplete : l.toastLeafFilled);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final keyboard = MediaQuery.of(context).viewInsets.bottom;
     final safeBottom = MediaQuery.of(context).padding.bottom; // 홈 인디케이터
     return Padding(
@@ -74,10 +77,10 @@ class _RecordSheetState extends ConsumerState<_RecordSheet> {
                 ),
               ),
             ),
-            Text('어떤 선행을 베푸셨나요?',
+            Text(l.recordTitle,
                 style: AppText.base(size: 22, weight: FontWeight.w700, letterSpacingEm: -0.03)),
             const SizedBox(height: 6),
-            Text('작은 선행도 클로버의 잎이 됩니다.',
+            Text(l.recordSubtitle,
                 style: AppText.base(size: 14, weight: FontWeight.w500, color: AppColors.muted)),
             const SizedBox(height: 20),
             Container(
@@ -95,7 +98,7 @@ class _RecordSheetState extends ConsumerState<_RecordSheet> {
                 style: AppText.base(size: 16, weight: FontWeight.w500, height: 1.5),
                 cursorColor: AppColors.accent,
                 decoration: InputDecoration.collapsed(
-                  hintText: '예: 엘리베이터 문을 잡아주었습니다.',
+                  hintText: l.recordHint,
                   hintStyle:
                       AppText.base(size: 16, weight: FontWeight.w500, color: AppColors.muted),
                 ),
@@ -112,7 +115,7 @@ class _RecordSheetState extends ConsumerState<_RecordSheet> {
                   borderRadius: BorderRadius.circular(AppRadius.button),
                 ),
                 child: Text(
-                  '기록 완료하고 잎 채우기',
+                  l.recordSubmit,
                   style: AppText.base(
                     size: 17,
                     weight: FontWeight.w700,

@@ -46,8 +46,8 @@ class AppController extends Notifier<AppState> {
 
   // ---- navigation ----
   void setTab(AppTab t) => state = state.copyWith(tab: t);
-  void setArchiveFilter(ArchiveFilter f) =>
-      state = state.copyWith(archiveFilter: f);
+  void setArchiveView(ArchiveView v) =>
+      state = state.copyWith(archiveView: v);
 
   // ---- 선행 기록 ----
   /// 잎 하나를 채운다. 반환값: 이번 기록으로 클로버가 완성되었는지 여부.
@@ -64,9 +64,9 @@ class AppController extends Notifier<AppState> {
         HistoryEntry(
             id: DateTime.now().millisecondsSinceEpoch,
             date: _today(),
+            kind: HistoryKind.deed,
             text: deed,
-            delta: '🍀 잎 +1',
-            positive: true),
+            amount: 1),
         ...state.history,
       ],
     );
@@ -91,21 +91,42 @@ class AppController extends Notifier<AppState> {
   }
 
   // ---- 소원 ----
-  bool canAfford(Wish w) => state.clovers >= w.cost;
+  /// 소원에 클로버 1개를 담는다. 보유 클로버 -1, 해당 소원 deposited +1.
+  /// 반환값: 이번 담기로 소원이 가득 찼는지(완성됐는지) 여부.
+  bool depositClover(Wish w) {
+    if (state.clovers <= 0) return false;
+    final idx = state.wishes.indexWhere((x) => x.id == w.id);
+    if (idx < 0) return false;
+    final cur = state.wishes[idx];
+    if (cur.deposited >= cur.cost) return false; // 이미 가득
+    final updated = cur.copyWith(deposited: cur.deposited + 1);
+    final list = [...state.wishes]..[idx] = updated;
+    state = state.copyWith(clovers: state.clovers - 1, wishes: list);
+    _persist();
+    return updated.deposited >= updated.cost;
+  }
 
-  /// 소원 확정(차감 + 기록). 수익화 플로우의 광고 종료 후 호출된다.
-  void grantWish(Wish w) {
-    if (state.clovers < w.cost) return;
+  /// 소원 완성 처리 — 활성 목록에서 빼서 도감으로 이동 + 기록.
+  /// 클로버는 담기 단계에서 이미 차감됐으므로 여기선 차감하지 않는다.
+  /// 광고 종료 후 오버레이가 호출한다.
+  void completeWish(Wish w) {
+    final idx = state.wishes.indexWhere((x) => x.id == w.id);
+    if (idx < 0) return;
+    final cur = state.wishes[idx];
+    final done = cur.copyWith(deposited: cur.cost, completedAt: _today());
+    final remaining = [...state.wishes]..removeAt(idx);
     state = state.copyWith(
-      clovers: state.clovers - w.cost,
+      tab: AppTab.dex, // 전달 후 소원 도감으로 이동(하이라이트 + 바로 확인)
+      wishes: remaining,
+      completedWishes: [done, ...state.completedWishes],
       statWishes: state.statWishes + 1,
       history: [
         HistoryEntry(
             id: DateTime.now().millisecondsSinceEpoch,
             date: _today(),
-            text: '[소원 성취] ${w.text}',
-            delta: '🍀 클로버 -${w.cost}',
-            positive: false),
+            kind: HistoryKind.wish,
+            text: done.text,
+            amount: done.cost),
         ...state.history,
       ],
     );

@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../state/app_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pressable.dart';
 import '../widgets/tab_icons.dart';
 import 'archive_screen.dart';
+import 'dex_screen.dart';
 import 'home_screen.dart';
 import 'store_screen.dart';
 
@@ -41,6 +43,7 @@ class HomeShell extends ConsumerWidget {
                   child: switch (tab) {
                     AppTab.home => const HomeScreen(),
                     AppTab.store => const StoreScreen(),
+                    AppTab.dex => const DexScreen(),
                     AppTab.archive => const ArchiveScreen(),
                   },
                 ),
@@ -61,6 +64,7 @@ class _TabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return ClipRect(
       child: BackdropFilter(
@@ -74,9 +78,10 @@ class _TabBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _item(TabIconKind.home, '홈', AppTab.home),
-              _item(TabIconKind.store, '소원 상점', AppTab.store),
-              _item(TabIconKind.archive, '나의 기록', AppTab.archive),
+              _item(TabIconKind.home, l.tabHome, AppTab.home),
+              _item(TabIconKind.store, l.tabStore, AppTab.store),
+              _item(TabIconKind.dex, l.tabDex, AppTab.dex),
+              _item(TabIconKind.archive, l.tabArchive, AppTab.archive),
             ],
           ),
         ),
